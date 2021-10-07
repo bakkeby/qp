@@ -5,12 +5,23 @@
 
 import logging
 import sys
+import re
 
 from filereader import FileReader
 from options import Options
 from args import Arguments
 from intuition import Intuition
 from plotter import Plotter
+
+def lines_to_rows(lines, delimiter):
+    rows = []
+    for line in lines:
+        if (line.isspace()):
+            continue
+        if delimiter == ' ':
+            line = re.sub('\s+', delimiter, line)
+        rows.append(line.split(delimiter))
+    return rows
 
 def main():
     """
@@ -34,13 +45,9 @@ example commands:
     options.parse_args()
     cfg_file = options.get('cfg_file', default=str.replace(__file__, '.py', '.cfg'))
     options.load_config(cfg_file)
+    logging.config.fileConfig(cfg_file)
 
     log = logging.getLogger('qp')
-    log.handlers = []
-    handler = logging.StreamHandler(sys.stderr)
-    frmt = logging.Formatter(fmt="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-    handler.setFormatter(frmt)
-    log.addHandler(handler)
     if options.get('debug', default=False):
         log.setLevel(logging.DEBUG)
 
@@ -72,8 +79,14 @@ example commands:
     delimiter = options.get('delimiter')
     if not delimiter:
         delimiter = intuition.deduce_delimiter_from_lines(lines)
-    cols = intuition.deduce_plot_columns_from_lines(lines, delimiter)
-    plotter.plot(lines, delimiter, cols)
+
+    rows = lines_to_rows(lines, delimiter)
+    cols = intuition.deduce_plot_columns_from_rows(rows)
+    if not cols:
+        log.info("Could not deduce data from file, aborting")
+        return
+
+    plotter.plot(delimiter, cols)
     plotter.save_plot(outfile)
 
 if __name__ == "__main__":

@@ -34,7 +34,7 @@ class Plotter:
         self.options = options
         pass
 
-    def plot(self, lines: [str], delimiter, cols):
+    def plot(self, delimiter, cols):
 
         fig, axs = plt.subplots()
 
@@ -56,8 +56,11 @@ class Plotter:
         axs.set_title(self.options.get('title'))
         axs.grid(self.options.get('gridlines', default=False))
 
-        fmt = matplotlib.dates.DateFormatter('%Y-%m-%d')
+        fmtStr = '%Y-%m-%d' if cols[0][0][-1] - cols[0][0][0] > 1.0 else '%H:%M:%S'
+        fmt = matplotlib.dates.DateFormatter(fmtStr)
+
         axs.xaxis.set_major_formatter(fmt)
+        # axs.xaxis.set_minor_formatter(fmt)
         plt.xticks(rotation=self.options.get('xticksrotation'))
         plt.legend()
 

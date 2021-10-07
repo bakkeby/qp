@@ -68,15 +68,11 @@ class Intuition:
                 max_numb = numb + time
                 delimiter = delimiters[del_idx]
 
+        log.debug(f'Deduced delimiter to be "{delimiter}"')
+
         return delimiter
 
-    def deduce_plot_columns_from_lines(self, lines, delimiter):
-
-        rows = []
-        for line in lines:
-            if (line.isspace()):
-                continue
-            rows.append(line.split(delimiter))
+    def deduce_plot_columns_from_rows(self, rows):
 
         # Select the first time column found for the x column
         time_cols = []
@@ -108,7 +104,7 @@ class Intuition:
             for row in rows:
                 if c >= len(row):
                     if not uneven_cols_warning_logged:
-                        log.warning('Uneven number of columns detected for line: ' + delimiter.join(row))
+                        log.warning(f'Uneven number of columns detected for line: {row}')
                         uneven_cols_warning_logged = True
                     continue
 
@@ -125,7 +121,6 @@ class Intuition:
                         timefmt = self.deduce_input_time_format_from_time(col)
                         if not timefmt:
                             continue
-                    # print(f"trying to parse '{col}' with timefmt of {timefmt}")
                     time = datetime.strptime(col, timefmt)
                     if time.year == 1900:
                         time = time.replace(year=datetime.now().year)
@@ -181,6 +176,7 @@ class Intuition:
             '^[0-9]{2}:[0-9]{2}:[0-9]{2}$': '%H:%M:%S',
             '^[0-9]{2}:[0-9]{2}$': '%H:%M',
             '^[0-9]{8}_[0-9]{2}$': '%Y%m%d_%',
+            '^[0-9]{8}$': '%Y%m%d',
         }
 
         for regexp in time_formats:
@@ -188,5 +184,5 @@ class Intuition:
             if tfmt_re.match(time):
                 timefmt = time_formats[regexp]
                 break
-        log.debug(f"time format, using deduced timeformat of {timefmt}")
+        log.debug(f"Deduced timeformat as \"{timefmt}\"")
         return timefmt
